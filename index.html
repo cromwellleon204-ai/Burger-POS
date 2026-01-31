@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FF6B35">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Burger POS">
+    <meta name="description" content="Advanced POS System for Burger Shop">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle fill='%23FF6B35' cx='50' cy='50' r='50'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🍔%3C/text%3E%3C/svg%3E">
+    <title>Burger POS - Advanced</title>
+    <link rel="stylesheet" href="pos-styles.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>🍔 Burger POS</h1>
+                <p>Please login to continue</p>
+            </div>
+            
+            <div class="login-role-selector">
+                <div class="role-btn active" data-role="cashier" onclick="Auth.selectRole('cashier')">
+                    👤<br>Cashier
+                </div>
+                <div class="role-btn" data-role="supervisor" onclick="Auth.selectRole('supervisor')">
+                    👨‍💼<br>Supervisor
+                </div>
+                <div class="role-btn" data-role="admin" onclick="Auth.selectRole('admin')">
+                    ⚙️<br>Admin
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="loginUsername" placeholder="Enter username" onkeypress="if(event.key==='Enter') Auth.login()">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="if(event.key==='Enter') Auth.login()">
+            </div>
+
+            <button class="btn btn-success" onclick="Auth.login()" style="width: 100%; padding: 16px; font-size: 16px;">
+                Login
+            </button>
+
+            <div style="margin-top: 15px; text-align: center; font-size: 12px; color: #666;">
+                Demo: admin/admin123 | supervisor/super123 | cashier/cash123
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" class="hidden">
+        <div class="container">
+            <!-- User Info Bar -->
+            <div class="user-info-display">
+                <div>
+                    <strong id="currentUserDisplay">Not logged in</strong><br>
+                    <small id="currentRoleDisplay">Role: None</small>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="clockBtn" class="clock-btn" onclick="Attendance.toggleClock()">Clock In</button>
+                    <button class="btn btn-danger" onclick="Auth.logout()">Logout</button>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <div class="header">
+                <div class="store-name" id="storeName">Burger Paradise</div>
+                <div class="header-actions">
+                    <button class="btn btn-light" onclick="Views.show('orders')">📋 Orders</button>
+                    <button class="btn btn-warning" onclick="Views.show('inventory')">📦 Inventory</button>
+                    <button class="btn btn-secondary" onclick="Views.show('reports')">📊 Reports</button>
+                    <button class="btn btn-light" onclick="Views.show('staff')" id="btnStaffMgmt">👥 Staff</button>
+                    <button class="btn btn-light" onclick="Views.show('attendance')" id="btnAttendance">🕐 Attendance</button>
+                    <button class="btn btn-primary" onclick="Views.show('admin')" id="btnAdmin">⚙️ Admin</button>
+                </div>
+            </div>
+
+            <!-- Main POS View -->
+            <div id="posView" class="main-layout">
+                <!-- Menu Section -->
+                <div class="menu-section">
+                    <div class="quick-actions">
+                        <button class="btn btn-secondary" onclick="POS.repeatLastOrder()">🔄 Repeat Last</button>
+                        <button class="btn btn-warning" onclick="POS.showPopularItems()">⭐ Popular</button>
+                    </div>
+                    <div class="category-tabs" id="categoryTabs"></div>
+                    <div class="menu-grid" id="menuGrid"></div>
+                </div>
+
+                <!-- Cart Section -->
+                <div class="cart-section">
+                    <div class="cart-header">Current Order</div>
+                    <div class="cart-items" id="cartItems">
+                        <p style="text-align: center; color: #999; margin-top: 50px;">Cart is empty</p>
+                    </div>
+                    <div class="discount-section">
+                        <strong>Discount:</strong>
+                        <div class="discount-input">
+                            <input type="number" id="discountValue" placeholder="0" min="0">
+                            <select id="discountType">
+                                <option value="percent">%</option>
+                                <option value="fixed">₱</option>
+                            </select>
+                            <button class="btn btn-secondary" onclick="POS.applyDiscount()">Apply</button>
+                        </div>
+                        <div id="approvalRequired" class="approval-required hidden">
+                            ⚠️ Supervisor approval required for discounts
+                        </div>
+                    </div>
+                    <div class="cart-totals" id="cartTotals"></div>
+                    <div class="checkout-actions">
+                        <button class="btn btn-success" onclick="POS.checkout()" style="padding: 16px; font-size: 16px;">
+                            💳 Checkout
+                        </button>
+                        <button class="btn btn-danger" onclick="POS.clearCart()">🗑️ Clear Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Views (Admin, Staff, Attendance, Reports, etc.) -->
+            <div id="adminView" class="hidden"></div>
+            <div id="staffView" class="hidden"></div>
+            <div id="attendanceView" class="hidden"></div>
+            <div id="reportsView" class="hidden"></div>
+            <div id="ordersView" class="hidden"></div>
+            <div id="inventoryView" class="hidden"></div>
+        </div>
+    </div>
+
+    <!-- All Modals -->
+    <div id="customModal" class="modal"></div>
+    <div id="editModal" class="modal"></div>
+    <div id="checkoutModal" class="modal"></div>
+    <div id="receiptModal" class="modal"></div>
+    <div id="approvalModal" class="modal"></div>
+    <div id="voidModal" class="modal"></div>
+    <div id="staffEditModal" class="modal"></div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <!-- Load JavaScript Modules -->
+    <script src="pos-core.js"></script>
+    <script src="staff-management.js"></script>
+    <script src="attendance.js"></script>
+    <script src="ui-customization.js"></script>
+    <script src="reports.js"></script>
+    <script src="pos-main.js"></script>
+</body>
+</html>
